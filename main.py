@@ -52,20 +52,22 @@ async def get_scroll_page(request: Request):
     return templates.TemplateResponse("scroll.html", {"request": request})
 
 
-# ✅ 수정됨: title 속성 사용
+# ✅ 수정됨: 한 번에 20개씩 반환하여 스크롤 유도
 @app.get("/api/items")
 async def get_scroll_items(page: int = Query(1, ge=1)):
     if page > 10: return []
 
-    # 12개씩 생성 (화면 채우기 위함)
-    start_id = (page - 1) * 12 + 1
+    # 20개씩 생성 (화면이 큰 모니터 대응)
+    items_per_page = 20
+    start_id = (page - 1) * items_per_page + 1
+
     items = []
-    for i in range(start_id, start_id + 12):
+    for i in range(start_id, start_id + items_per_page):
         items.append({
             "id": i,
-            "title": f"크롤링 연습 상품 {i}",  # scroll.html에서 item.title로 받음
-            "price": i * 1500,
-            "description": f"스크롤 실습용 데이터 {i}번 입니다."
+            "title": f"크롤링 연습 상품 {i}",
+            "price": i * 1000,
+            "description": f"스크롤 실습용 데이터 {i}번 입니다. 화면을 채우기 위해 길게 작성했습니다."
         })
 
     await asyncio.sleep(0.5)
