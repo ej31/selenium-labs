@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무한 스크롤 실습</title>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; margin: 0; padding: 0; background-color: #f9f9f9; }
+        header { background-color: #333; color: white; padding: 1rem; text-align: center; position: fixed; top: 0; width: 100%; z-index: 100; }
+        .content-area { max-width: 800px; margin: 80px auto 20px; padding: 20px; }
+        
+        /* Selenium Target Class: .product-item */
+        .product-item {
+            background: white; border: 1px solid #ddd; border-radius: 8px;
+            margin-bottom: 20px; padding: 20px; display: flex; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s;
+        }
+        .product-item:hover { transform: translateY(-3px); }
+        .circle { width: 50px; height: 50px; background-color: #3498db; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 20px; flex-shrink: 0; }
+        .info h3 { margin: 0 0 5px 0; color: #333; }
+        .info p { margin: 0; color: #666; font-size: 0.9em; }
+        .price { margin-left: auto; font-weight: bold; color: #e74c3c; font-size: 1.2em; }
+        
+        #loader { text-align: center; padding: 20px; display: none; }
+        .end-msg { text-align: center; color: #888; padding: 30px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>무한 스크롤 데이터 수집 (Page <span id="page-num">1</span>)</h1>
+    </header>
+
+    <div class="content-area" id="container">
+        <!-- 자바스크립트로 아이템이 여기에 추가됨 -->
+    </div>
+
+    <div id="loader">데이터 불러오는 중... ⏳</div>
+    <div id="end-message" class="end-msg">모든 데이터를 불러왔습니다! 🎉</div>
+
+    <script>
+        let page = 1;
+        let isLoading = false;
+        let isFinished = false;
+        const container = document.getElementById('container');
+        const loader = document.getElementById('loader');
+        const endMsg = document.getElementById('end-message');
+        const pageNumDisplay = document.getElementById('page-num');
+
+        async function loadItems() {
+            if (isLoading || isFinished) return;
+            
+            isLoading = true;
+            loader.style.display = 'block';
+
+            try {
+                let items = [];
+
+                // 🛠️ 환경 감지: 미리보기(blob) 환경인지 확인
+                // 이 코드가 없으면 미리보기에서 fetch 에러가 발생합니다.
+                const isPreview = window.location.protocol === 'blob:' || window.location.protocol === 'file:';
+
+                if (isPreview) {
+                    console.log("⚠️ 미리보기 모드: 백엔드 없이 가짜 데이터를 생성합니다.");
+                    // 실제 API처럼 0.5초 딜레이 시뮬레이션
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    if (page > 10) {
+                        items = [];
+                    } else {
+                        // 백엔드 데이터 구조와 동일하게 가짜 데이터 생성
+                        const startId = (page - 1) * 6 + 1;
+                        items = Array.from({length: 6}, (_, i) => {
+                            const id = startId + i;
+                            return {
+                                id: id,
+                                title: `[실습] 크롤링 연습 상품 ${id}`,
+                                price: id * 1500,
+                                description: `이 상품은 ${id}번째 데이터입니다. 스크롤을 내려보세요.`
+                            };
+                        });
+                    }
+                } else {
+                    // ✅ 실제 배포 환경 (Render 등): FastAPI 백엔드 호출
+                    const response = await fetch(`/api/items?page=${page}`);
+                    items = await response.json();
+                }
+
+                if (items.length === 0) {
+                    isFinished = true;
+                    loader.style.display = 'none';
+                    endMsg.style.display = 'block';
+                    return;
+                }
+
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'product-item'; // Selenium Target Class
+                    div.innerHTML = `
+                        <div class="circle">${item.id}</div>
+                        <div class="info">
+                            <h3>${item.title}</h3>
+                            <p>${item.description}</p>
+                        </div>
+                        <div class="price">${item.price.toLocaleString()}원</div>
+                    `;
+                    container.appendChild(div);
+                });
+
+                page++;
+                pageNumDisplay.innerText = page - 1;
+
+            } catch (err) {
+                console.error("데이터 로딩 실패:", err);
+                loader.innerHTML = "데이터를 불러오는데 실패했습니다. (새로고침 해주세요)";
+            } finally {
+                isLoading = false;
+                loader.style.display = 'none';
+            }
+        }
+
+        // 초기 로딩
+        loadItems();
+
+        // 스크롤 이벤트 감지
+        window.addEventListener('scroll', () => {
+            // 문서 전체 높이 - (현재 스크롤 위치 + 화면 높이) < 100px 일 때 로딩
+            if (document.documentElement.offsetHeight - (window.scrollY + window.innerHeight) < 100) {
+                loadItems();
+            }
+        });
+    </script>
+</body>
+</html>

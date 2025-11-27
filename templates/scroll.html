@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Infinite Scroll Test</title>
+    <style>
+        .item { border: 1px solid #ddd; margin: 10px; padding: 20px; background: #f9f9f9; }
+        .item h3 { margin: 0; }
+    </style>
+</head>
+<body>
+    <h1>무한 스크롤 테스트</h1>
+    <div id="container">
+        </div>
+
+    <script>
+        let page = 1;
+        
+        async function loadMore() {
+            const response = await fetch(`/api/items?page=${page}`);
+            const items = await response.json();
+            
+            const container = document.getElementById('container');
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item'; // Selenium으로 찾을 class name
+                div.innerHTML = `<h3>${item.name}</h3><p>가격: ${item.price}</p>`;
+                div.setAttribute("data-id", item.id); // get_attribute 연습용
+                container.appendChild(div);
+            });
+            page++;
+        }
+
+        // 초기 로딩
+        loadMore();
+
+        // 스크롤 이벤트 (바닥에 닿으면 추가 로딩)
+        window.onscroll = function() {
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+                loadMore();
+            }
+        };
+    </script>
+</body>
+</html>
