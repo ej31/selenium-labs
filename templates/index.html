@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selenium 크롤링 실습 센터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- 히어로 섹션 -->
+    <header class="bg-white shadow-sm border-b border-slate-200">
+        <div class="max-w-5xl mx-auto px-6 py-16 text-center">
+            <div class="inline-block p-3 rounded-full bg-blue-100 text-blue-600 mb-4">
+                <i class="fas fa-robot text-3xl"></i>
+            </div>
+            <h1 class="text-4xl font-bold mb-4 text-slate-900">Selenium 크롤링 실습 센터</h1>
+            <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                이곳은 크롤링 봇을 훈련시키는 시뮬레이션 공간입니다.<br>
+                동적 로딩과 무한 스크롤 등 난이도 있는 패턴을 직접 파해쳐보세요.
+            </p>
+        </div>
+    </header>
+
+    <!-- 실습 목록 섹션 -->
+    <main class="max-w-5xl mx-auto px-6 py-12">
+        <div class="grid md:grid-cols-2 gap-8">
+            
+            <!-- 실습 1: AJAX -->
+            <div class="group bg-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 text-xl font-bold">
+                        <i class="fas fa-stopwatch"></i>
+                    </div>
+                    <span class="bg-orange-50 text-orange-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Level 1</span>
+                </div>
+                <h2 class="text-2xl font-bold mb-3 group-hover:text-orange-600 transition-colors">AJAX 지연 로딩</h2>
+                <p class="text-slate-600 mb-8 leading-relaxed">
+                    서버 응답이 느릴 때 크롤러가 어떻게 대처해야 할까요?
+                    <code class="bg-slate-100 px-1 py-0.5 rounded text-sm text-slate-800">WebDriverWait</code>와
+                    <code class="bg-slate-100 px-1 py-0.5 rounded text-sm text-slate-800">Explicit Wait</code>를
+                    사용하여 3초 뒤에 나타나는 데이터를 안전하게 수집하는 방법을 실습합니다.
+                </p>
+                <a href="/ajax" class="block w-full text-center bg-white border-2 border-orange-500 text-orange-600 font-bold py-3 rounded-xl hover:bg-orange-500 hover:text-white transition-colors">
+                    실습 시작하기 <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+
+            <!-- 실습 2: 무한 스크롤 -->
+            <div class="group bg-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 text-xl font-bold">
+                        <i class="fas fa-scroll"></i>
+                    </div>
+                    <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Level 2</span>
+                </div>
+                <h2 class="text-2xl font-bold mb-3 group-hover:text-blue-600 transition-colors">무한 스크롤</h2>
+                <p class="text-slate-600 mb-8 leading-relaxed">
+                    스크롤을 내려야만 로딩되는 동적 페이지입니다.
+                    <code class="bg-slate-100 px-1 py-0.5 rounded text-sm text-slate-800">window.scrollTo</code>
+                    스크립트 실행과 데이터 개수 변화 감지 로직을 통해
+                    숨겨진 데이터를 끝까지 찾아내는 방법을 익힙니다.
+                </p>
+                <a href="/scroll" class="block w-full text-center bg-white border-2 border-blue-500 text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-500 hover:text-white transition-colors">
+                    실습 시작하기 <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="text-center py-8 text-slate-400 text-sm">
+        <p>© 2024 Selenium Crawling Lab. For Educational Purpose.</p>
+    </footer>
+
+</body>
+</html>
