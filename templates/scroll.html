@@ -1,44 +1,138 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>Infinite Scroll Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무한 스크롤 실습</title>
     <style>
-        .item { border: 1px solid #ddd; margin: 10px; padding: 20px; background: #f9f9f9; }
-        .item h3 { margin: 0; }
+        body { font-family: 'Noto Sans KR', sans-serif; margin: 0; padding: 0; background-color: #f9f9f9; }
+        header { background-color: #333; color: white; padding: 1rem; text-align: center; position: fixed; top: 0; width: 100%; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .content-area { max-width: 800px; margin: 100px auto 20px; padding: 20px; min-height: 100vh; }
+        
+        /* Selenium Target Class: .product-item */
+        .product-item {
+            background: white; border: 1px solid #ddd; border-radius: 8px;
+            margin-bottom: 20px; padding: 20px; display: flex; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s;
+            opacity: 0; animation: fadeIn 0.5s forwards;
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+        .product-item:hover { transform: translateY(-3px); }
+        .circle { width: 50px; height: 50px; background-color: #3498db; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 20px; flex-shrink: 0; }
+        .info h3 { margin: 0 0 5px 0; color: #333; }
+        .info p { margin: 0; color: #666; font-size: 0.9em; }
+        .price { margin-left: auto; font-weight: bold; color: #e74c3c; font-size: 1.2em; }
+        
+        /* 바닥 감지 센서 (Sentinel) */
+        #sentinel { height: 20px; margin-top: 20px; }
+        
+        #loader { text-align: center; padding: 20px; display: none; color: #666; }
+        .end-msg { text-align: center; color: #888; padding: 30px; font-weight: bold; display: none; }
     </style>
 </head>
 <body>
-    <h1>무한 스크롤 테스트</h1>
-    <div id="container">
-        </div>
+    <header>
+        <h1>무한 스크롤 데이터 수집 (Page <span id="page-num">0</span>)</h1>
+    </header>
+
+    <div class="content-area" id="container">
+        <!-- 아이템 추가 영역 -->
+    </div>
+
+    <!-- ✅ 스크롤 감지용 투명 센서 -->
+    <div id="loader">데이터 불러오는 중... ⏳</div>
+    <div id="sentinel"></div>
+    <div id="end-message" class="end-msg">모든 데이터를 불러왔습니다! 🎉</div>
 
     <script>
         let page = 1;
-        
-        async function loadMore() {
-            const response = await fetch(`/api/items?page=${page}`);
-            const items = await response.json();
+        let isLoading = false;
+        let isFinished = false;
+        const container = document.getElementById('container');
+        const loader = document.getElementById('loader');
+        const sentinel = document.getElementById('sentinel');
+        const endMsg = document.getElementById('end-message');
+        const pageNumDisplay = document.getElementById('page-num');
+
+        // 데이터 로딩 함수
+        async function loadItems() {
+            if (isLoading || isFinished) return;
             
-            const container = document.getElementById('container');
-            items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'item'; // Selenium으로 찾을 class name
-                div.innerHTML = `<h3>${item.name}</h3><p>가격: ${item.price}</p>`;
-                div.setAttribute("data-id", item.id); // get_attribute 연습용
-                container.appendChild(div);
-            });
-            page++;
+            isLoading = true;
+            loader.style.display = 'block';
+
+            try {
+                let items = [];
+                // 🛠️ 환경 감지 (미리보기 vs 실제 서버)
+                const isPreview = window.location.protocol === 'blob:' || window.location.protocol === 'file:';
+
+                if (isPreview) {
+                    await new Promise(resolve => setTimeout(resolve, 500)); // 가짜 딜레이
+                    if (page > 5) items = [];
+                    else {
+                        const startId = (page - 1) * 12 + 1;
+                        items = Array.from({length: 12}, (_, i) => ({
+                            id: startId + i,
+                            title: `[Preview] 상품 ${startId + i}`,
+                            price: (startId + i) * 1000,
+                            description: "미리보기 환경 가짜 데이터입니다."
+                        }));
+                    }
+                } else {
+                    // ✅ 실제 백엔드 통신
+                    const response = await fetch(`/api/items?page=${page}`);
+                    items = await response.json();
+                }
+
+                if (items.length === 0) {
+                    isFinished = true;
+                    loader.style.display = 'none';
+                    sentinel.style.display = 'none'; // 센서 제거
+                    endMsg.style.display = 'block';
+                    return;
+                }
+
+                // DOM 추가
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'product-item';
+                    
+                    // 🛡️ 안전장치: title이 없으면 name을 쓰고, 그것도 없으면 '제목 없음'
+                    const title = item.title || item.name || '제목 없음';
+                    const description = item.description || '설명이 없습니다.';
+                    const price = item.price ? item.price.toLocaleString() : '0';
+
+                    div.innerHTML = `
+                        <div class="circle">${item.id}</div>
+                        <div class="info">
+                            <h3>${title}</h3>
+                            <p>${description}</p>
+                        </div>
+                        <div class="price">${price}원</div>
+                    `;
+                    container.appendChild(div);
+                });
+
+                pageNumDisplay.innerText = page;
+                page++;
+
+            } catch (err) {
+                console.error("Load Error:", err);
+                loader.innerText = "로딩 실패 (새로고침 필요)";
+            } finally {
+                isLoading = false;
+                loader.style.display = 'none';
+            }
         }
 
-        // 초기 로딩
-        loadMore();
-
-        // 스크롤 이벤트 (바닥에 닿으면 추가 로딩)
-        window.onscroll = function() {
-            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-                loadMore();
+        // ✅ Intersection Observer (화면 바닥 감지)
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !isLoading && !isFinished) {
+                loadItems();
             }
-        };
+        }, { threshold: 0.1 });
+
+        observer.observe(sentinel);
     </script>
 </body>
 </html>
