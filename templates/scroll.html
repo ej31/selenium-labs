@@ -4,44 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>무한 스크롤 실습</title>
+    <!-- Tailwind CSS CDN 추가 -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Noto Sans KR', sans-serif; margin: 0; padding: 0; background-color: #f9f9f9; }
-        header { background-color: #333; color: white; padding: 1rem; text-align: center; position: fixed; top: 0; width: 100%; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .content-area { max-width: 800px; margin: 100px auto 20px; padding: 20px; min-height: 100vh; }
-        
-        .product-item {
-            background: white; border: 1px solid #ddd; border-radius: 8px;
-            margin-bottom: 20px; padding: 20px; display: flex; align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s;
-            opacity: 0; animation: fadeIn 0.5s forwards;
-        }
-        @keyframes fadeIn { to { opacity: 1; } }
-        .product-item:hover { transform: translateY(-3px); }
-        .circle { width: 50px; height: 50px; background-color: #3498db; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 20px; flex-shrink: 0; }
-        .info h3 { margin: 0 0 5px 0; color: #333; }
-        .info p { margin: 0; color: #666; font-size: 0.9em; }
-        .price { margin-left: auto; font-weight: bold; color: #e74c3c; font-size: 1.2em; }
-        
-        /* 바닥 감지 센서 (Sentinel) */
-        #sentinel { height: 20px; margin-top: 20px; border: 1px dashed transparent; }
-        
-        #loader { text-align: center; padding: 20px; display: none; color: #666; }
-        .end-msg { text-align: center; color: #888; padding: 30px; font-weight: bold; display: none; }
+        /* Tailwind로 대체하기 복잡한 커스텀 애니메이션만 남김 */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fadeIn { animation: fadeIn 0.5s forwards; }
     </style>
 </head>
-<body>
-    <header>
-        <h1>무한 스크롤 데이터 수집 (Page <span id="page-num">0</span>)</h1>
+<body class="bg-gray-50 font-sans">
+    <header class="fixed top-0 left-0 w-full z-50 bg-gray-800 text-white p-4 text-center shadow-md">
+        <h1 class="text-xl font-bold">무한 스크롤 데이터 수집 (Page <span id="page-num">0</span>)</h1>
     </header>
 
-    <div class="content-area" id="container">
+    <!-- 콘텐츠 영역 -->
+    <div id="container" class="max-w-3xl mx-auto mt-28 px-5 min-h-screen">
         <!-- 아이템 추가 영역 -->
     </div>
 
-    <div id="loader">데이터 불러오는 중... ⏳</div>
+    <!-- 로더 및 상태 메시지 -->
+    <div id="loader" class="text-center p-5 text-gray-500 hidden">데이터 불러오는 중... ⏳</div>
+    
     <!-- ✅ 스크롤 감지용 센서 -->
-    <div id="sentinel"></div>
-    <div id="end-message" class="end-msg">모든 데이터를 불러왔습니다! 🎉</div>
+    <div id="sentinel" class="h-5 mt-5 border border-dashed border-transparent"></div>
+    
+    <div id="end-message" class="text-center text-gray-400 font-bold p-8 hidden">모든 데이터를 불러왔습니다! 🎉</div>
 
     <script>
         let page = 1;
@@ -52,12 +39,15 @@
         const sentinel = document.getElementById('sentinel');
         const endMsg = document.getElementById('end-message');
         const pageNumDisplay = document.getElementById('page-num');
-        const ITEMS_PER_PAGE = 20; // 20개로 증가
+        
+        // 한 페이지당 20개씩 불러와서 스크롤바 생성 유도
+        const ITEMS_PER_PAGE = 20;
 
         async function loadItems() {
             if (isLoading || isFinished) return;
             
             isLoading = true;
+            // Tailwind hidden 클래스 토글 방식 대신 style.display 사용 (기존 로직 유지)
             loader.style.display = 'block';
 
             try {
@@ -91,19 +81,22 @@
 
                 items.forEach(item => {
                     const div = document.createElement('div');
-                    div.className = 'product-item';
+                    
+                    // ✅ Tailwind 클래스 적용
+                    // Selenium 실습용 'product-item' 클래스는 맨 앞에 유지
+                    div.className = 'product-item bg-white border border-gray-200 rounded-lg mb-5 p-5 flex items-center shadow-sm transition-transform duration-200 hover:-translate-y-1 opacity-0 animate-fadeIn';
                     
                     const title = item.title || item.name || '제목 없음';
                     const description = item.description || '설명이 없습니다.';
                     const price = item.price ? item.price.toLocaleString() : '0';
 
                     div.innerHTML = `
-                        <div class="circle">${item.id}</div>
-                        <div class="info">
-                            <h3>${title}</h3>
-                            <p>${description}</p>
+                        <div class="circle w-12 h-12 bg-blue-500 rounded-full text-white flex items-center justify-center font-bold mr-5 shrink-0 shadow-sm">${item.id}</div>
+                        <div class="info flex-1">
+                            <h3 class="text-gray-800 font-bold mb-1 text-lg">${title}</h3>
+                            <p class="text-gray-500 text-sm m-0 leading-relaxed">${description}</p>
                         </div>
-                        <div class="price">${price}원</div>
+                        <div class="price ml-auto font-bold text-red-500 text-xl tracking-tight">${price}원</div>
                     `;
                     container.appendChild(div);
                 });
@@ -118,7 +111,6 @@
                 isLoading = false;
                 loader.style.display = 'none';
                 
-                // ✅ 중요: 로딩이 끝났는데도 센서가 여전히 화면에 보이면(화면이 너무 커서) 즉시 더 로딩함
                 checkSentinelVisibility();
             }
         }
@@ -130,8 +122,10 @@
         }, { threshold: 0.1 });
 
         observer.observe(sentinel);
+        
+        // ✅ 페이지 접속 시 초기 데이터 20개를 즉시 불러옵니다.
+        loadItems();
 
-        // 로딩 완료 후 재검사 함수
         function checkSentinelVisibility() {
             if (!isFinished && !isLoading) {
                 const rect = sentinel.getBoundingClientRect();
